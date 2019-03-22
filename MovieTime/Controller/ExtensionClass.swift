@@ -28,19 +28,22 @@ extension MovieMainPage: UICollectionViewDelegate, UICollectionViewDataSource {
         }
         cell.title.text = dict["title"] as? String
         cell.dateOfR.text = ""
+        
         return cell
     }
-    
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         MoviewDetails.movieDetails = movie[indexPath.row]
     }
     
     func collectionView(_ collectionView: UICollectionView, willDisplay cell: UICollectionViewCell, forItemAt indexPath: IndexPath) {
-        if indexPath.row == movie.count - 1{
-            
+        if indexPath.row == movie.count - 1 {
+
+            refreshControl.triggerVerticalOffset = 100.0
+            refreshControl.addTarget(self, action: #selector(self.refresh), for: .valueChanged)
+            collectionView.bottomRefreshControl = refreshControl
+            refresh()
         }
     }
-    
 }
 

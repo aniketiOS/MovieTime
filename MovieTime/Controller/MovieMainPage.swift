@@ -10,35 +10,19 @@ import UIKit
 import Alamofire
 import SwiftyJSON
 import AlamofireImage
-
-//class Movie: NSObject{
-//
-//    var imageUrl: String?
-//    var title: String?
-//    var releaseDate: String?
-//    var descrip: String?
-//
-//
-//    init(imageUrl: String?, title: String, releaseDate: String, descrip: String) {
-//        if let u = imageUrl {
-//            self.imageUrl = "https://image.tmdb.org/t/p/w500\(u)"
-//        }
-//        self.title = title
-//        self.releaseDate = releaseDate
-//        self.descrip = descrip
-//    }
-//}
+import CCBottomRefreshControl
 
 class MovieMainPage: UIViewController, UISearchBarDelegate, UISearchControllerDelegate {
     
     var limit = 20
-    var currentPage : Int = 0
+    var currentPage : Int = 1
     var isLoadingList : Bool = false
     var movie = [[String:AnyObject]]()
     var paginationRecords = [String]()
     let apiKey = "2758fdf8c2125bb54354ddc86d04c4a2"
     var api = "popular"
     private var searchController = UISearchController(searchResultsController: nil)
+    var refreshControl = UIRefreshControl()
     
     @IBOutlet weak var LefyBarButtonItemTitle: UIBarButtonItem!
     @IBOutlet weak var collectionView: UICollectionView!
@@ -46,6 +30,10 @@ class MovieMainPage: UIViewController, UISearchBarDelegate, UISearchControllerDe
     override func viewDidLoad() {
         super.viewDidLoad()
         getDetails()
+        refreshControl.triggerVerticalOffset = 100.0
+        refreshControl.addTarget(self, action: #selector(self.refresh), for: .valueChanged)
+        collectionView.bottomRefreshControl = refreshControl
+        
         searchController = ({
             let controller = UISearchController(searchResultsController: nil)
             controller.delegate = self
@@ -57,30 +45,18 @@ class MovieMainPage: UIViewController, UISearchBarDelegate, UISearchControllerDe
             return controller
         })()
     }
-    //   Pagination
-//    func getListFromServer(_ pageNumber: Int){
-//        self.isLoadingList = false
-//        self.collectionView.reloadData()
-//    }
-//    func loadMoreItemsForList(){
-//        currentPage += 1
-//        getListFromServer(currentPage)
-//    }
-//    func scrollViewDidScroll(_ scrollView: UIScrollView) {
-//        if (((scrollView.contentOffset.y + scrollView.frame.size.height) > scrollView.contentSize.height ) && !isLoadingList){
-//            self.isLoadingList = true
-//            self.loadMoreItemsForList()
-//        }
-//    }
+   
+    @objc func refresh(){
+        currentPage += 1
+        getDetails()
+    }
+
     func getDetails() -> Void {
-        
-        Alamofire.request("https://api.themoviedb.org/3/movie/\(api)?api_key=\(apiKey)").responseJSON { (responseData) -> Void  in
+        Alamofire.request("https://api.themoviedb.org/3/movie/\(api)?api_key=\(apiKey)&page=\(currentPage)").responseJSON { (responseData) -> Void  in
             if ((responseData.result.value) != nil){
                 let jsonData = JSON(responseData.result.value!)
                 if let movies = jsonData["results"].arrayObject {
-                    
-                    self.movie = movies as! [[String : AnyObject]]
-                    
+                    self.movie.append(contentsOf: movies as! [[String: AnyObject]])
                 }
                 self.collectionView.reloadData()
             }
@@ -88,6 +64,8 @@ class MovieMainPage: UIViewController, UISearchBarDelegate, UISearchControllerDe
     }
     
     func setApi(newApi: String) {
+        self.movie.removeAll()
+        currentPage = 1
         self.api = newApi
         getDetails()
     }
@@ -104,16 +82,17 @@ class MovieMainPage: UIViewController, UISearchBarDelegate, UISearchControllerDe
         self.present(alert, animated: true)
     }
     
+    //when top rated tapped
     func topRatedClicked() -> Void {
         setApi(newApi: "top_rated")
         self.LefyBarButtonItemTitle.title = "Top Rated Movies"
     }
-    
+    //when popular tapped
     func popularClicked() -> Void {
         setApi(newApi: "popular")
         self.LefyBarButtonItemTitle.title = "Most Popular Movies"
     }
-    
+    //when search icon clicked
     @IBAction func searchIcon(_ sender: Any) {
         configureSearch()
     }
