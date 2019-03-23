@@ -10,30 +10,26 @@ import UIKit
 import Alamofire
 import SwiftyJSON
 import AlamofireImage
-import CCBottomRefreshControl
 
 class MovieMainPage: UIViewController, UISearchBarDelegate, UISearchControllerDelegate {
-    
-    var limit = 20
-    var currentPage : Int = 1
-    var isLoadingList : Bool = false
-    var movie = [[String:AnyObject]]()
-    var paginationRecords = [String]()
-    let apiKey = "2758fdf8c2125bb54354ddc86d04c4a2"
-    var api = "popular"
+   
+    //properties
     private var searchController = UISearchController(searchResultsController: nil)
-    var refreshControl = UIRefreshControl()
+    var activityIndiator: UIActivityIndicatorView?
+    var totalCount: NSInteger?
     
+    //outlets
     @IBOutlet weak var LefyBarButtonItemTitle: UIBarButtonItem!
     @IBOutlet weak var collectionView: UICollectionView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         getDetails()
-        refreshControl.triggerVerticalOffset = 100.0
-        refreshControl.addTarget(self, action: #selector(self.refresh), for: .valueChanged)
-        collectionView.bottomRefreshControl = refreshControl
-        
+        activityIndicatorMenu()
+        searchBarControllerMenu()
+    }
+   
+    func searchBarControllerMenu(){
         searchController = ({
             let controller = UISearchController(searchResultsController: nil)
             controller.delegate = self
@@ -45,18 +41,48 @@ class MovieMainPage: UIViewController, UISearchBarDelegate, UISearchControllerDe
             return controller
         })()
     }
-   
+    
+    func activityIndicatorMenu() {
+        activityIndiator = UIActivityIndicatorView(frame: CGRect(x: self.view.frame.midX - 15, y: self.view.frame.height - 140, width: 30, height: 30))
+        activityIndiator?.style = .white
+        activityIndiator?.color = UIColor.black
+        activityIndiator?.hidesWhenStopped = true
+        activityIndiator?.backgroundColor = UIColor.groupTableViewBackground
+        activityIndiator?.layer.cornerRadius = 15
+        self.view.addSubview(activityIndiator!)
+        self.view.bringSubviewToFront(activityIndiator!)
+    }
+    
     @objc func refresh(){
-        currentPage += 1
+        API.isGetResponse = false
+        activityIndiator?.startAnimating()
+        self.view.bringSubviewToFront(activityIndiator!)
+        API.currentPage = API.currentPage + 1
         getDetails()
     }
 
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        if API.isGetResponse {
+            if (scrollView.contentOffset.y == scrollView.contentSize.height - scrollView.frame.size.height)
+            {
+                if totalCount! > MoviewDetails.movie.count{
+                    refresh()
+                }
+            }
+        }
+    }
+    
     func getDetails() -> Void {
-        Alamofire.request("https://api.themoviedb.org/3/movie/\(api)?api_key=\(apiKey)&page=\(currentPage)").responseJSON { (responseData) -> Void  in
+        Alamofire.request("https://api.themoviedb.org/3/movie/\(API.api)?api_key=\(API.apiKey)&page=\(API.currentPage)").responseJSON { (responseData) -> Void  in
             if ((responseData.result.value) != nil){
                 let jsonData = JSON(responseData.result.value!)
                 if let movies = jsonData["results"].arrayObject {
-                    self.movie.append(contentsOf: movies as! [[String: AnyObject]])
+                    MoviewDetails.movie.append(contentsOf: movies as! [[String: AnyObject]])
+                    self.activityIndiator?.stopAnimating()
+                    API.isGetResponse = true
+                }
+                if let totalMoviesArray = jsonData["total_results"].int {
+                    self.totalCount = totalMoviesArray
                 }
                 self.collectionView.reloadData()
             }
@@ -64,9 +90,9 @@ class MovieMainPage: UIViewController, UISearchBarDelegate, UISearchControllerDe
     }
     
     func setApi(newApi: String) {
-        self.movie.removeAll()
-        currentPage = 1
-        self.api = newApi
+        MoviewDetails.movie.removeAll()
+        API.currentPage = 1
+        API.api = newApi
         getDetails()
     }
     
@@ -117,11 +143,11 @@ class MovieMainPage: UIViewController, UISearchBarDelegate, UISearchControllerDe
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         
         if !searchText.isEmpty {
-            Alamofire.request("https://api.themoviedb.org/3/search/movie?api_key=\(apiKey)&query=\(searchText)").responseJSON { (responseData) -> Void  in
+            Alamofire.request("https://api.themoviedb.org/3/search/movie?api_key=\(API.apiKey)&query=\(searchText)").responseJSON { (responseData) -> Void  in
                 if ((responseData.result.value) != nil){
                     let jsonData = JSON(responseData.result.value!)
                     if let searchMovies = jsonData["results"].arrayObject {
-                        self.movie = searchMovies as! [[String : AnyObject]]
+                        MoviewDetails.movie = searchMovies as! [[String : AnyObject]]
                     }
                     self.collectionView.reloadData()
                 }
