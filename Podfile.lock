@@ -1,0 +1,29 @@
+PODS:
+  - Alamofire (4.8.1)
+  - AlamofireImage (3.5.0):
+    - Alamofire (~> 4.8)
+  - CCBottomRefreshControl (0.5.2)
+  - SwiftyJSON (4.2.0)
+
+DEPENDENCIES:
+  - Alamofire (~> 4.8)
+  - AlamofireImage (~> 3.5.0)
+  - CCBottomRefreshControl
+  - SwiftyJSON (~> 4.0)
+
+SPEC REPOS:
+  https://github.com/cocoapods/specs.git:
+    - Alamofire
+    - AlamofireImage
+    - CCBottomRefreshControl
+    - SwiftyJSON
+
+SPEC CHECKSUMS:
+  Alamofire: 16ce2c353fb72865124ddae8a57c5942388f4f11
+  AlamofireImage: 1aea346f4dda2f6c67622fa5a89fcbb80d79cc16
+  CCBottomRefreshControl: 389780b4488321c91d18f66a6da5ef9606df6de5
+  SwiftyJSON: c4bcba26dd9ec7a027fc8eade48e2c911f229e96
+
+PODFILE CHECKSUM: 778459a227d50b1d8ffc8569eb8c5a8bd2ec66a6
+
+COCOAPODS: 1.5.3

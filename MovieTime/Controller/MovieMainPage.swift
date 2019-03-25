@@ -141,7 +141,6 @@ class MovieMainPage: UIViewController, UISearchBarDelegate, UISearchControllerDe
     }
     
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
-        
         if !searchText.isEmpty {
             Alamofire.request("https://api.themoviedb.org/3/search/movie?api_key=\(API.apiKey)&query=\(searchText)").responseJSON { (responseData) -> Void  in
                 if ((responseData.result.value) != nil){
